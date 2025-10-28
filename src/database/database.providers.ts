@@ -8,9 +8,9 @@ export const databaseProviders = [
         type: 'mysql',
         host: 'localhost',
         port: 3307,
-        username: 'root',
+        username: 'medium_admin',
         password: '',
-        database: 'medium_clone',
+        database: 'medium_clone_db',
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
         synchronize: true,
       });
