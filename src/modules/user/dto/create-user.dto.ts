@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Tên không được để trống' })
@@ -16,6 +22,7 @@ export class CreateUserDto {
 
   @IsString({ message: 'Password phải là một chuỗi' })
   @IsNotEmpty({ message: 'Password không được để trống' })
+  @MinLength(6, { message: 'Password phải có ít nhất 6 ký tự' })
   password: string;
 
   @IsString({ message: 'Bio phải là một chuỗi' })
