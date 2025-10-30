@@ -12,6 +12,11 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
+  async hashPassword(password: string): Promise<string> {
+    const salt = 10;
+    return await bcrypt.hash(password, salt);
+  }
+
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
