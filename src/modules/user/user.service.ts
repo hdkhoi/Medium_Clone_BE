@@ -17,41 +17,68 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    const { email, username } = createUserDto;
-
-    const emailExists = await this.checkEmailExists(email);
-    if (emailExists) {
-      throw new ConflictException('Đăng ký tài khoản không thành công', {
-        description: 'Email đã được sử dụng',
-      });
-    }
-
-    const usernameExists = await this.checkUsernameExists(username);
-    if (usernameExists) {
-      throw new ConflictException('Đăng ký tài khoản không thành công', {
-        description: 'Username đã được sử dụng',
-      });
-    }
-
+  async hashPassword(password: string): Promise<string> {
     const salt = 10;
-    createUserDto.password = await bcrypt.hash(createUserDto.password, salt);
-    console.log('Hashed password:', createUserDto.password);
+    return await bcrypt.hash(password, salt);
+  }
 
-    const user = this.userRepository.create(createUserDto);
-    return this.userRepository.save(user);
+  async create(createUserDto: CreateUserDto) {
+    const { email, username, password } = createUserDto;
+
+    const existingEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (existingEmail) {
+      throw new ConflictException('Create user failed', {
+        description: 'Email already in use',
+      });
+    }
+
+    const existingUsername = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (existingUsername) {
+      throw new ConflictException('Create user failed', {
+        description: 'Username already in use',
+      });
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+
+    const newUser = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+    const savedUser = await this.userRepository.save(newUser);
+
+    return {
+      message: 'User created successfully',
+      data: {
+        id: savedUser.id,
+        email: savedUser.email,
+        username: savedUser.username,
+      },
+    };
   }
 
   findAll() {
     return `This action returns all user`;
   }
 
-  async getUserById(id: number) {
+  async findById(id: number) {
     const result = await this.userRepository.findOne({ where: { id } });
     return {
       message: 'User retrieved successfully',
       data: result,
     };
+  }
+
+  async findByEmail(email: string) {
+    const result = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'username'],
+    });
+    return result;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
@@ -60,15 +87,5 @@ export class UserService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
-  }
-
-  async checkEmailExists(email: string): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    return !!user;
-  }
-
-  async checkUsernameExists(username: string): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { username } });
-    return !!user;
   }
 }

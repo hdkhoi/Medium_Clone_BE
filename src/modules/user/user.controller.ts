@@ -27,7 +27,7 @@ export class UserController {
   }
 
   @Get(':id')
-  async getUserById(@Param('id') id: string) {
+  async findById(@Param('id') id: string) {
     if (!id) {
       throw new BadRequestException('Invalid User ID');
     }
@@ -38,7 +38,7 @@ export class UserController {
       });
     }
 
-    return await this.userService.getUserById(+id);
+    return await this.userService.findById(+id);
   }
 
   @Patch(':id')

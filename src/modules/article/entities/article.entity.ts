@@ -1,38 +1,28 @@
 import { CommentEntity } from 'src/modules/comment/entities/comment.entity';
 import { UserEntity } from 'src/modules/user/entities/user.entity';
 import {
+  Check,
   Column,
   Entity,
   JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
 } from 'typeorm';
+import { BaseEntity } from 'src/common/class/base-entity.class';
 
 @Entity({ name: 'articles' })
-export class ArticleEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ nullable: false })
+export class ArticleEntity extends BaseEntity {
+  @Column({ length: 100, nullable: false })
   title: string;
 
-  @Column({ nullable: false })
+  @Column({ length: 100, nullable: false })
   slug: string;
 
-  @Column({ nullable: false })
+  @Column({ length: 300, nullable: false })
   description: string;
 
   @Column('simple-array')
   tagList: string[];
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
 
   @OneToMany(() => CommentEntity, (comment) => comment.article)
   comments: CommentEntity[];
