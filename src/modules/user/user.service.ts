@@ -17,6 +17,11 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
+  async hashPassword(password: string): Promise<string> {
+    const salt = 10;
+    return await bcrypt.hash(password, salt);
+  }
+
   async create(createUserDto: CreateUserDto) {
     const { email, username } = createUserDto;
 
@@ -46,12 +51,26 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  async getUserById(id: number) {
+  async findById(id: number) {
     const result = await this.userRepository.findOne({ where: { id } });
     return {
       message: 'User retrieved successfully',
       data: result,
     };
+  }
+
+  async findByEmail(email: string) {
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'username', 'password'],
+    });
+  }
+
+  async checkPassword(
+    plainTextPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
