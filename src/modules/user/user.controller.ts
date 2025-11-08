@@ -7,10 +7,13 @@ import {
   Param,
   Delete,
   BadRequestException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +29,7 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @UseGuards(JwtGuard)
   @Get(':id')
   async findById(@Param('id') id: string) {
     if (!id) {

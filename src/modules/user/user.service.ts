@@ -23,28 +23,42 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { email, username } = createUserDto;
+    const { email, username, password } = createUserDto;
 
-    const emailExists = await this.checkEmailExists(email);
-    if (emailExists) {
-      throw new ConflictException('Đăng ký tài khoản không thành công', {
-        description: 'Email đã được sử dụng',
+    const existingEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (existingEmail) {
+      throw new ConflictException('Create user failed', {
+        description: 'Email already in use',
       });
     }
 
-    const usernameExists = await this.checkUsernameExists(username);
-    if (usernameExists) {
-      throw new ConflictException('Đăng ký tài khoản không thành công', {
-        description: 'Username đã được sử dụng',
+    const existingUsername = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (existingUsername) {
+      throw new ConflictException('Create user failed', {
+        description: 'Username already in use',
       });
     }
 
-    const salt = 10;
-    createUserDto.password = await bcrypt.hash(createUserDto.password, salt);
-    console.log('Hashed password:', createUserDto.password);
+    const hashedPassword = await this.hashPassword(password);
 
-    const user = this.userRepository.create(createUserDto);
-    return this.userRepository.save(user);
+    const newUser = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+    const savedUser = await this.userRepository.save(newUser);
+
+    return {
+      message: 'User created successfully',
+      data: {
+        id: savedUser.id,
+        email: savedUser.email,
+        username: savedUser.username,
+      },
+    };
   }
 
   findAll() {
@@ -79,15 +93,5 @@ export class UserService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
-  }
-
-  async checkEmailExists(email: string): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    return !!user;
-  }
-
-  async checkUsernameExists(username: string): Promise<boolean> {
-    const user = await this.userRepository.findOne({ where: { username } });
-    return !!user;
   }
 }
