@@ -8,8 +8,10 @@ import { Strategy, ExtractJwt } from 'passport-jwt';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {
     super({
+      //Extract token từ header "Authorization: Bearer xxx"
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      // Verify signature với secret key
       secretOrKey: configService.get<string>('JWT_SECRET') as string,
     });
   }

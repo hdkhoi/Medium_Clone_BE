@@ -13,6 +13,9 @@ export class AuthService {
       id,
       email,
     });
-    return { accessToken, user: { id, email } };
+    return {
+      message: 'Login successfully',
+      data: { accessToken, user: { id, email } },
+    };
   }
 }
