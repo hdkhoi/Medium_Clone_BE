@@ -4,8 +4,8 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { IApiResponse } from '../interfaces/IApiResponse';
 
@@ -13,10 +13,9 @@ import { IApiResponse } from '../interfaces/IApiResponse';
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
 
     let status: number;
     let message: string;

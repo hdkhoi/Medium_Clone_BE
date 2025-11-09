@@ -6,7 +6,6 @@ import { UserModule } from './modules/user/user.module';
 import { ArticleModule } from './modules/article/article.module';
 import { CommentModule } from './modules/comment/comment.module';
 import { ConfigModule } from '@nestjs/config';
-// import { AuthModule } from './modules/auth/auth.module';
 import { TypeOrmConfigService } from './configs/typeorm.config';
 
 @Module({

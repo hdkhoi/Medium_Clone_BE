@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  BadRequestException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,16 +27,6 @@ export class UserController {
 
   @Get(':id')
   async findById(@Param('id') id: string) {
-    if (!id) {
-      throw new BadRequestException('Invalid User ID');
-    }
-
-    if (isNaN(+id)) {
-      throw new BadRequestException('Invalid User ID', {
-        description: 'ID must be a number',
-      });
-    }
-
     return await this.userService.findById(+id);
   }
 

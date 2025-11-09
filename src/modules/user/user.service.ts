@@ -1,14 +1,11 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { passwordSaltRounds } from 'src/common/constants/user.constant';
 
 @Injectable()
 export class UserService {
@@ -18,8 +15,7 @@ export class UserService {
   ) {}
 
   async hashPassword(password: string): Promise<string> {
-    const salt = 10;
-    return await bcrypt.hash(password, salt);
+    return (await bcrypt.hash(password, passwordSaltRounds)) as string;
   }
 
   async create(createUserDto: CreateUserDto) {
