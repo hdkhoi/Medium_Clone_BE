@@ -1,35 +1,44 @@
+import { ConfigService } from '@nestjs/config';
+import { IsString, MaxLength, MinLength } from 'class-validator';
 import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MinLength,
-} from 'class-validator';
+  bioMaxLength,
+  imageMaxLength,
+  passwordMaxLength,
+  passwordMinLength,
+  usernameMaxLength,
+  usernameMinLength,
+} from 'src/common/constants/user.constant';
+import {
+  EmailRequired,
+  LengthDistance,
+  StringRequired,
+} from 'src/common/decorators';
 
 export class CreateUserDto {
-  @IsNotEmpty({ message: 'Tên không được để trống' })
-  @IsString({ message: 'Tên phải là một chuỗi' })
+  @StringRequired('Name')
+  @MaxLength(20, { message: 'Name must be at most 20 characters long' })
   name: string;
 
-  @IsString({ message: 'Username phải là một chuỗi' })
-  @IsNotEmpty({ message: 'Username không được để trống' })
+  @StringRequired('Username')
+  @LengthDistance(usernameMinLength, usernameMaxLength, 'Username')
   username: string;
 
-  @IsString({ message: 'Email phải là một chuỗi' })
-  @IsNotEmpty({ message: 'Email không được để trống' })
-  @IsEmail({}, { message: 'Email không hợp lệ' })
+  @EmailRequired('Email')
   email: string;
 
-  @IsString({ message: 'Password phải là một chuỗi' })
-  @IsNotEmpty({ message: 'Password không được để trống' })
-  @MinLength(6, { message: 'Password phải có ít nhất 6 ký tự' })
+  @StringRequired('Password')
+  @LengthDistance(passwordMinLength, passwordMaxLength, 'Password')
   password: string;
 
-  @IsString({ message: 'Bio phải là một chuỗi' })
-  @IsOptional()
+  @IsString({ message: 'Bio must be a string' })
+  @MaxLength(bioMaxLength, {
+    message: `Bio must be at most ${bioMaxLength} characters long`,
+  })
   bio?: string;
 
-  @IsString({ message: 'Image phải là một chuỗi' })
-  @IsOptional()
+  @IsString({ message: 'Image must be a string' })
+  @MaxLength(imageMaxLength, {
+    message: `Image must be at most ${imageMaxLength} characters long`,
+  })
   image?: string;
 }

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -9,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { passwordSaltRounds } from 'src/common/constants/user.constant';
 
 @Injectable()
 export class UserService {
@@ -18,8 +20,7 @@ export class UserService {
   ) {}
 
   async hashPassword(password: string): Promise<string> {
-    const salt = 10;
-    return await bcrypt.hash(password, salt);
+    return (await bcrypt.hash(password, passwordSaltRounds)) as string;
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -66,7 +67,19 @@ export class UserService {
   }
 
   async findById(id: number) {
+    if (isNaN(id)) {
+      throw new BadRequestException('Invalid user ID', {
+        description: 'User ID must be a number',
+      });
+    }
+
     const result = await this.userRepository.findOne({ where: { id } });
+    if (!result) {
+      throw new NotFoundException('User not found', {
+        description: `No user found with ID ${id}`,
+      });
+    }
+
     return {
       message: 'User retrieved successfully',
       data: result,

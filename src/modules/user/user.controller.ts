@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  BadRequestException,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -32,16 +31,6 @@ export class UserController {
   @UseGuards(JwtGuard)
   @Get(':id')
   async findById(@Param('id') id: string) {
-    if (!id) {
-      throw new BadRequestException('Invalid User ID');
-    }
-
-    if (isNaN(+id)) {
-      throw new BadRequestException('Invalid User ID', {
-        description: 'ID must be a number',
-      });
-    }
-
     return await this.userService.findById(+id);
   }
 
