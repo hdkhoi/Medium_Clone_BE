@@ -3,8 +3,8 @@ import { IsString, MaxLength, MinLength } from 'class-validator';
 import {
   BIO_MAX_LENGTH,
   IMAGE_MAX_LENGTH,
-  PASSWORD_MAX_LENGTH,
-  PASSWORD_MIN_LENGTH,
+  passwordMaxLength,
+  passwordMinLength,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
 } from 'src/common/constants/user.constant';
@@ -27,7 +27,7 @@ export class CreateUserDto {
   email: string;
 
   @StringRequired('Password')
-  @LengthDistance(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, 'Password')
+  @LengthDistance(passwordMinLength, passwordMaxLength, 'Password')
   password: string;
 
   @IsString({ message: 'Bio must be a string' })

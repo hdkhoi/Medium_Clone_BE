@@ -10,6 +10,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { typeORMConfig } from './configs/typeorm.config';
 import { JwtModule, JwtModuleAsyncOptions } from '@nestjs/jwt';
 import { jwtConfig } from './configs/jwt.config';
+import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { config } from 'process';
 
 @Module({
   imports: [
@@ -26,6 +28,18 @@ import { jwtConfig } from './configs/jwt.config';
       global: true,
       useFactory: (configService: ConfigService): JwtModuleAsyncOptions =>
         jwtConfig(configService),
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): ThrottlerModuleOptions => ({
+        throttlers: [
+          {
+            name: 'login',
+            ttl: configService.get<number>('THROTTLE_TTL') as number,
+            limit: configService.get<number>('THROTTLE_LIMIT') as number,
+          },
+        ],
+      }),
     }),
     UserModule,
     ArticleModule,

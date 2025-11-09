@@ -4,10 +4,10 @@ export const USERNAME_MAX_LENGTH = 30;
 export const USERNAME_MIN_LENGTH = 3;
 
 export const PASSWORD_SALT_ROUNDS = 10;
-export const PASSWORD_MIN_LENGTH = process.env.USER_PASSWORD_MIN_LENGTH
+export const passwordMinLength = process.env.USER_PASSWORD_MIN_LENGTH
   ? parseInt(process.env.USER_PASSWORD_MIN_LENGTH)
   : 6;
-export const PASSWORD_MAX_LENGTH = process.env.USER_PASSWORD_MAX_LENGTH
+export const passwordMaxLength = process.env.USER_PASSWORD_MAX_LENGTH
   ? parseInt(process.env.USER_PASSWORD_MAX_LENGTH)
   : 20;
 
