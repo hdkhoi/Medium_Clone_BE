@@ -13,9 +13,6 @@ export class LocalAuthGuard extends AuthGuard('local') {
     if (err) {
       throw err;
     }
-    console.log('err:', err);
-    console.log('info:', info);
-    console.log('user:', user);
 
     return user;
   }
