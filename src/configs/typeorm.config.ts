@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { join } from 'path'; // Import 'join' từ 'path'
 
@@ -12,8 +12,10 @@ export const typeORMConfig = (
     port: configService.get<number>('DB_PORT') || 3307,
     username: configService.get<string>('DB_USERNAME'),
     password: configService.get<string>('DB_PASSWORD'),
-    database: 'medium_clone_db',
+    database: configService.get<string>('DB_NAME'),
     entities: [join(__dirname, '..', '**', '*.entity.{js,ts}')],
+    migrations: ['dist/migrations/*.js'],
+    migrationsRun: true, // ← Tự động chạy migration khi start
     synchronize: false,
   };
 };

@@ -24,40 +24,39 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { email, username, password } = createUserDto;
+    const { email, username } = createUserDto;
 
-    const existingEmail = await this.userRepository.findOne({
-      where: { email },
+    const checkUserExist = await this.userRepository.findOne({
+      where: [{ email }, { username }],
     });
-    if (existingEmail) {
-      throw new ConflictException('Create user failed', {
-        description: 'Email already in use',
-      });
+
+    if (checkUserExist) {
+      if (checkUserExist.email === email) {
+        throw new ConflictException('Create user failed', {
+          description: 'Email already in use',
+        });
+      }
+      if (checkUserExist.username === username) {
+        throw new ConflictException('Create user failed', {
+          description: 'Username already in use',
+        });
+      }
     }
 
-    const existingUsername = await this.userRepository.findOne({
-      where: { username },
-    });
-    if (existingUsername) {
-      throw new ConflictException('Create user failed', {
-        description: 'Username already in use',
-      });
-    }
-
-    const hashedPassword = await this.hashPassword(password);
-
+    const hashedPassword = await this.hashPassword(createUserDto.password);
     const newUser = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
     });
-    const savedUser = await this.userRepository.save(newUser);
+
+    await this.userRepository.save(newUser);
 
     return {
       message: 'User created successfully',
       data: {
-        id: savedUser.id,
-        email: savedUser.email,
-        username: savedUser.username,
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
       },
     };
   }

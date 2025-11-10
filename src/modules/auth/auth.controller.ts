@@ -12,7 +12,8 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
+import { SignInDto } from './dto/signin.dto';
 
 @Controller('users')
 export class AuthController {
@@ -21,7 +22,7 @@ export class AuthController {
   @Throttle({ login: {} })
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async signIn(@Req() req: any): Promise<any> {
+  async signIn(@Body() signInDto: SignInDto, @Req() req: any): Promise<any> {
     return this.authService.signIn(req.user);
   }
 }
