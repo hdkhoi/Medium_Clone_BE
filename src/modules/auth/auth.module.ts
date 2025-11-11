@@ -23,5 +23,6 @@ import { ThrottlerGuard } from '@nestjs/throttler';
       useClass: ThrottlerGuard,
     },
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

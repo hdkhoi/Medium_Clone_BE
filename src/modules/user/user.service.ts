@@ -11,32 +11,47 @@ import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PASSWORD_SALT_ROUNDS } from 'src/common/constants/user.constant';
+import { JwtService } from '@nestjs/jwt';
+import { IProfile, IUser } from 'src/common/interfaces/user.interface';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async hashPassword(password: string): Promise<string> {
     return (await bcrypt.hash(password, PASSWORD_SALT_ROUNDS)) as string;
   }
 
+  async checkExistUser(email?: string, username?: string) {
+    const user = await this.userRepository.findOne({
+      where: [{ email }, { username }],
+    });
+    return user;
+  }
+
+  async checkPassword(
+    plainTextPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
+  }
+
   async create(createUserDto: CreateUserDto) {
     const { email, username } = createUserDto;
 
-    const checkUserExist = await this.userRepository.findOne({
-      where: [{ email }, { username }],
-    });
+    const existedUser = await this.checkExistUser(email, username);
 
-    if (checkUserExist) {
-      if (checkUserExist.email === email) {
+    if (existedUser) {
+      if (existedUser.email === email) {
         throw new ConflictException('Create user failed', {
           description: 'Email already in use',
         });
       }
-      if (checkUserExist.username === username) {
+      if (existedUser.username === username) {
         throw new ConflictException('Create user failed', {
           description: 'Username already in use',
         });
@@ -61,11 +76,7 @@ export class UserService {
     };
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
-
-  async findById(id: number) {
+  async findById(id: number): Promise<IUser> {
     if (isNaN(id)) {
       throw new BadRequestException('Invalid user ID', {
         description: 'User ID must be a number',
@@ -79,10 +90,7 @@ export class UserService {
       });
     }
 
-    return {
-      message: 'User retrieved successfully',
-      data: result,
-    };
+    return result.getInfo();
   }
 
   async findByEmail(email: string) {
@@ -92,18 +100,69 @@ export class UserService {
     });
   }
 
-  async checkPassword(
-    plainTextPassword: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return await bcrypt.compare(plainTextPassword, hashedPassword);
+  async findByUsername(username: string): Promise<IProfile> {
+    const user = await this.userRepository.findOne({ where: { username } });
+
+    if (!user) {
+      throw new NotFoundException('User not found', {
+        description: `No user found with username ${username}`,
+      });
+    }
+
+    return user.getProfile();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<IUser> {
+    const user = await this.userRepository.findOne({ where: { id } });
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    let newToken: string | undefined;
+
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
+      const emailExist = await this.checkExistUser(
+        updateUserDto.email,
+        undefined,
+      );
+
+      if (emailExist) {
+        throw new ConflictException('Update failed', {
+          description: 'Email already in use',
+        });
+      } else {
+        newToken = await this.jwtService.signAsync({
+          id,
+          email: updateUserDto.email,
+        });
+      }
+    }
+
+    if (updateUserDto.username && updateUserDto.username !== user.username) {
+      const usernameExist = await this.checkExistUser(
+        undefined,
+        updateUserDto.username,
+      );
+      if (usernameExist) {
+        throw new ConflictException('Update failed', {
+          description: 'Username already in use',
+        });
+      }
+    }
+
+    // Cập nhật các field
+    Object.assign(user, updateUserDto);
+
+    if (updateUserDto.password) {
+      user.password = await this.hashPassword(updateUserDto.password);
+    }
+
+    // PHẢI SAVE để lưu vào database
+    const updatedUser = await this.userRepository.save(user);
+    return {
+      ...updatedUser?.getInfo(),
+      ...(newToken && { token: newToken }),
+    };
   }
 }

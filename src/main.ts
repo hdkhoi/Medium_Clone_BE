@@ -12,6 +12,7 @@ async function bootstrap() {
       whitelist: true, // whitelist loại bỏ các field không được định nghĩa trong DTO
       forbidNonWhitelisted: true, // forbidNonWhitelisted: true sẽ ném lỗi nếu có field không được định nghĩa trong DTO
       transform: true, // tự động chuyển đổi payload thành object DTO tương ứng
+      // stopAtFirstError: true, // dừng việc validate ngay khi gặp lỗi đầu tiên
       // transformOptions: { enableImplicitConversion: true }, // cho phép chuyển đổi kiểu dữ liệu ngầm định, ex: string to number
     }),
   );

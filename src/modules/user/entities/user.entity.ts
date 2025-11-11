@@ -1,4 +1,5 @@
 import { BaseEntity } from 'src/common/class/base-entity.class';
+import { IUser } from 'src/common/interfaces/user.interface';
 import { ArticleEntity } from 'src/modules/article/entities/article.entity';
 import { Entity, Column, OneToMany } from 'typeorm';
 
@@ -24,4 +25,21 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ArticleEntity, (article) => article.author)
   articles: ArticleEntity[];
+
+  getInfo = () => {
+    return {
+      email: this.email,
+      username: this.username,
+      bio: this.bio,
+      image: this.image,
+    };
+  };
+
+  getProfile = () => {
+    return {
+      username: this.username,
+      bio: this.bio,
+      image: this.image,
+    };
+  };
 }

@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import {
   BIO_MAX_LENGTH,
   IMAGE_MAX_LENGTH,
@@ -11,6 +11,7 @@ import {
 import {
   EmailRequired,
   LengthDistance,
+  StringOptional,
   StringRequired,
 } from 'src/common/decorators';
 
@@ -30,13 +31,13 @@ export class CreateUserDto {
   @LengthDistance(passwordMinLength, passwordMaxLength, 'Password')
   password: string;
 
-  @IsString({ message: 'Bio must be a string' })
+  @StringOptional('Bio')
   @MaxLength(BIO_MAX_LENGTH, {
     message: `Bio must be at most ${BIO_MAX_LENGTH} characters long`,
   })
   bio?: string;
 
-  @IsString({ message: 'Image must be a string' })
+  @StringOptional('Image')
   @MaxLength(IMAGE_MAX_LENGTH, {
     message: `Image must be at most ${IMAGE_MAX_LENGTH} characters long`,
   })

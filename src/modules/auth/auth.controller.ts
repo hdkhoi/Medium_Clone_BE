@@ -23,6 +23,10 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async signIn(@Body() signInDto: SignInDto, @Req() req: any): Promise<any> {
-    return this.authService.signIn(req.user);
+    const user = await this.authService.signIn(req.user);
+    return {
+      message: 'Login successfully',
+      data: user,
+    };
   }
 }
