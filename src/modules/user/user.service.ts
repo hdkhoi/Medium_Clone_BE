@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { passwordSaltRounds } from 'src/common/constants/user.constant';
+import { PASSWORD_SALT_ROUNDS } from 'src/common/constants/user.constant';
 
 @Injectable()
 export class UserService {
@@ -20,44 +20,43 @@ export class UserService {
   ) {}
 
   async hashPassword(password: string): Promise<string> {
-    return (await bcrypt.hash(password, passwordSaltRounds)) as string;
+    return (await bcrypt.hash(password, PASSWORD_SALT_ROUNDS)) as string;
   }
 
   async create(createUserDto: CreateUserDto) {
-    const { email, username, password } = createUserDto;
+    const { email, username } = createUserDto;
 
-    const existingEmail = await this.userRepository.findOne({
-      where: { email },
+    const checkUserExist = await this.userRepository.findOne({
+      where: [{ email }, { username }],
     });
-    if (existingEmail) {
-      throw new ConflictException('Create user failed', {
-        description: 'Email already in use',
-      });
+
+    if (checkUserExist) {
+      if (checkUserExist.email === email) {
+        throw new ConflictException('Create user failed', {
+          description: 'Email already in use',
+        });
+      }
+      if (checkUserExist.username === username) {
+        throw new ConflictException('Create user failed', {
+          description: 'Username already in use',
+        });
+      }
     }
 
-    const existingUsername = await this.userRepository.findOne({
-      where: { username },
-    });
-    if (existingUsername) {
-      throw new ConflictException('Create user failed', {
-        description: 'Username already in use',
-      });
-    }
-
-    const hashedPassword = await this.hashPassword(password);
-
+    const hashedPassword = await this.hashPassword(createUserDto.password);
     const newUser = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
     });
-    const savedUser = await this.userRepository.save(newUser);
+
+    await this.userRepository.save(newUser);
 
     return {
       message: 'User created successfully',
       data: {
-        id: savedUser.id,
-        email: savedUser.email,
-        username: savedUser.username,
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
       },
     };
   }
@@ -87,11 +86,17 @@ export class UserService {
   }
 
   async findByEmail(email: string) {
-    const result = await this.userRepository.findOne({
+    return this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'password', 'username'],
+      select: ['id', 'email', 'username', 'password'],
     });
-    return result;
+  }
+
+  async checkPassword(
+    plainTextPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

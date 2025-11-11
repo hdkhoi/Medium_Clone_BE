@@ -1,12 +1,12 @@
 import { ConfigService } from '@nestjs/config';
 import { IsString, MaxLength, MinLength } from 'class-validator';
 import {
-  bioMaxLength,
-  imageMaxLength,
+  BIO_MAX_LENGTH,
+  IMAGE_MAX_LENGTH,
   passwordMaxLength,
   passwordMinLength,
-  usernameMaxLength,
-  usernameMinLength,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
 } from 'src/common/constants/user.constant';
 import {
   EmailRequired,
@@ -20,7 +20,7 @@ export class CreateUserDto {
   name: string;
 
   @StringRequired('Username')
-  @LengthDistance(usernameMinLength, usernameMaxLength, 'Username')
+  @LengthDistance(USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH, 'Username')
   username: string;
 
   @EmailRequired('Email')
@@ -31,14 +31,14 @@ export class CreateUserDto {
   password: string;
 
   @IsString({ message: 'Bio must be a string' })
-  @MaxLength(bioMaxLength, {
-    message: `Bio must be at most ${bioMaxLength} characters long`,
+  @MaxLength(BIO_MAX_LENGTH, {
+    message: `Bio must be at most ${BIO_MAX_LENGTH} characters long`,
   })
   bio?: string;
 
   @IsString({ message: 'Image must be a string' })
-  @MaxLength(imageMaxLength, {
-    message: `Image must be at most ${imageMaxLength} characters long`,
+  @MaxLength(IMAGE_MAX_LENGTH, {
+    message: `Image must be at most ${IMAGE_MAX_LENGTH} characters long`,
   })
   image?: string;
 }

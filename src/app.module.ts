@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
 import { ArticleModule } from './modules/article/article.module';
 import { CommentModule } from './modules/comment/comment.module';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmConfigService } from './configs/typeorm.config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './modules/auth/auth.module';
+import { typeORMConfig } from './configs/typeorm.config';
+import { JwtModule, JwtModuleAsyncOptions } from '@nestjs/jwt';
+import { jwtConfig } from './configs/jwt.config';
+import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { config } from 'process';
 
 @Module({
   imports: [
@@ -14,13 +19,32 @@ import { TypeOrmConfigService } from './configs/typeorm.config';
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useClass: TypeOrmConfigService,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions =>
+        typeORMConfig(configService), //useFactory dùng để gọi hàm
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      global: true,
+      useFactory: (configService: ConfigService): JwtModuleAsyncOptions =>
+        jwtConfig(configService),
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): ThrottlerModuleOptions => ({
+        throttlers: [
+          {
+            name: 'login',
+            ttl: configService.get<number>('THROTTLE_TTL') as number,
+            limit: configService.get<number>('THROTTLE_LIMIT') as number,
+          },
+        ],
+      }),
     }),
     UserModule,
     ArticleModule,
     CommentModule,
-    // AuthModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
