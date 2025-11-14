@@ -12,7 +12,9 @@ export class LocalAuthGuard extends AuthGuard('local') {
   handleRequest(err: any, user: any, info: any) {
     if (err) {
       throw new BadRequestException('Login failed', {
-        description: err.message,
+        description:
+          err.response?.error ||
+          ('An error occurred during login' as string),
       });
     }
 

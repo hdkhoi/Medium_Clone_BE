@@ -12,7 +12,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { PASSWORD_SALT_ROUNDS } from 'src/common/constants/user.constant';
 import { JwtService } from '@nestjs/jwt';
-import { IProfile, IUser } from 'src/common/interfaces/user.interface';
+import { IUser } from 'src/common/interfaces/user.interface';
 
 @Injectable()
 export class UserService {
@@ -76,7 +76,7 @@ export class UserService {
     };
   }
 
-  async findById(id: number): Promise<IUser> {
+  async findById(id: number): Promise<UserEntity> {
     if (isNaN(id)) {
       throw new BadRequestException('Invalid user ID', {
         description: 'User ID must be a number',
@@ -90,7 +90,7 @@ export class UserService {
       });
     }
 
-    return result.getInfo();
+    return result;
   }
 
   async findByEmail(email: string) {
@@ -100,7 +100,7 @@ export class UserService {
     });
   }
 
-  async findByUsername(username: string): Promise<IProfile> {
+  async findByUsername(username: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
@@ -109,7 +109,7 @@ export class UserService {
       });
     }
 
-    return user.getProfile();
+    return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<IUser> {
@@ -161,7 +161,7 @@ export class UserService {
     // PHẢI SAVE để lưu vào database
     const updatedUser = await this.userRepository.save(user);
     return {
-      ...updatedUser?.getInfo(),
+      ...updatedUser,
       ...(newToken && { token: newToken }),
     };
   }

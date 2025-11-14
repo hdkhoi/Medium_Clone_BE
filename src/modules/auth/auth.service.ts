@@ -3,6 +3,7 @@ import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from './dto/signin.dto';
 import { IUser } from 'src/common/interfaces/user.interface';
+import { UserEntity } from '../user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -10,7 +11,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
   ) {}
-  async signIn({ id, email }): Promise<IUser> {
+  async signIn({ id, email }) {
     const accessToken = await this.jwtService.signAsync({
       id,
       email,
@@ -18,6 +19,6 @@ export class AuthService {
 
     const user = await this.userService.findById(id);
 
-    return { ...user, token: accessToken };
+    return { ...(user as UserEntity), token: accessToken };
   }
 }
