@@ -8,11 +8,15 @@ import {
   Delete,
   UseGuards,
   Req,
+  Put,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtGuard } from '../auth/guards/jwt.guard';
+import { IJwtPayload } from 'src/common/interfaces/IJwtPayload';
 
 @Controller('user')
 export class UserController {
@@ -23,24 +27,26 @@ export class UserController {
     return await this.userService.create(createUserDto);
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
+  @UseGuards(JwtGuard)
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  async getCurrentUser(@Req() req: any) {
+    const { id } = req.user as IJwtPayload;
+    const user = await this.userService.findById(id);
+    return {
+      message: 'Get current user successfully',
+      data: user,
+    };
   }
 
   @UseGuards(JwtGuard)
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    return await this.userService.findById(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @Put()
+  async update(@Req() req: any, @Body() updateUserDto: UpdateUserDto) {
+    const { id } = req.user as IJwtPayload;
+    const user = await this.userService.update(id, updateUserDto);
+    return {
+      message: 'User updated successfully',
+      data: user,
+    };
   }
 }

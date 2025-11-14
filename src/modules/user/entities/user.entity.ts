@@ -1,4 +1,6 @@
+import { Exclude } from 'class-transformer';
 import { BaseEntity } from 'src/common/class/base-entity.class';
+import { IUser } from 'src/common/interfaces/user.interface';
 import { ArticleEntity } from 'src/modules/article/entities/article.entity';
 import { Entity, Column, OneToMany } from 'typeorm';
 
@@ -13,6 +15,7 @@ export class UserEntity extends BaseEntity {
   @Column({ length: 10, unique: true, nullable: false })
   username: string;
 
+  @Exclude()
   @Column({ length: 200, nullable: false, select: false })
   password: string;
 
@@ -24,4 +27,15 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ArticleEntity, (article) => article.author)
   articles: ArticleEntity[];
+
+  @Exclude()
+  declare created_at: Date;
+
+  @Exclude()
+  declare updated_at: Date;
+
+  constructor(partial: Partial<UserEntity>) {
+    super();
+    Object.assign(this, partial);
+  }
 }
