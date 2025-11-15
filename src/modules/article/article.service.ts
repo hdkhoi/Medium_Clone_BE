@@ -79,6 +79,7 @@ export class ArticleService {
       },
       take: limit,
       skip: offset,
+      order: { created_at: 'DESC' },
     });
     return { articles, articlesCount: count };
   }
