@@ -47,4 +47,7 @@ export class ArticleEntity extends BaseEntity {
   @Exclude()
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
+
+  @Exclude()
+  declare id: number;
 }

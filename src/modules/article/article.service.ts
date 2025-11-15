@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,6 +12,8 @@ import { UserService } from '../user/user.service';
 import { TagEntity } from '../tag/entities/tag.entity';
 import { TagService } from '../tag/tag.service';
 import { FindManyArticlesQueryDto } from './dto/find-many-articles-query.dto';
+import { CreateCommentDto } from '../comment/dto/create-comment.dto';
+import { CommentService } from '../comment/comment.service';
 
 @Injectable()
 export class ArticleService {
@@ -16,6 +22,7 @@ export class ArticleService {
     private readonly articleRepository: Repository<ArticleEntity>,
     private readonly userService: UserService,
     private readonly tagService: TagService,
+    // private readonly commentSerivice: CommentService,
   ) {}
 
   async validateTitle(title: string) {
@@ -147,4 +154,42 @@ export class ArticleService {
 
     return await this.articleRepository.softRemove(article);
   }
+
+  // async addComment(
+  //   createCommentDto: CreateCommentDto,
+  //   authorId: number,
+  //   slug: string,
+  // ) {
+  //   const { body } = createCommentDto;
+
+  //   const article = await this.findBySlug(slug);
+
+  //   const author = await this.userService.findById(authorId);
+
+  //   return await this.commentSerivice.create(body, article.id, author);
+  // }
+
+  // async getComments(articleId: number) {
+  //   return await this.commentSerivice.findByArticleId(articleId);
+  // }
+
+  // async removeComment(slug: string, commentId: number, authorId: number) {
+  //   const article = await this.findBySlug(slug);
+
+  //   const comments = await this.commentSerivice.findByArticleId(article.id);
+  //   const targetComment = comments.find((comment) => comment.id === commentId);
+  //   if (!targetComment) {
+  //     throw new ConflictException('Delete comment failed', {
+  //       description: 'Comment not found',
+  //     });
+  //   }
+
+  //   if (targetComment.author.id !== authorId) {
+  //     throw new ForbiddenException('Delete comment failed', {
+  //       description: 'You are not the author of this comment',
+  //     });
+  //   }
+
+  //   await this.commentSerivice.remove(commentId);
+  // }
 }

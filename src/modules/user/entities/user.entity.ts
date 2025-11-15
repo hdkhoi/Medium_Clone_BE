@@ -29,6 +29,9 @@ export class UserEntity extends BaseEntity {
   articles: ArticleEntity[];
 
   @Exclude()
+  declare id: number;
+
+  @Exclude()
   declare created_at: Date;
 
   @Exclude()
