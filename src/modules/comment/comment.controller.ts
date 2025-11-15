@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -44,7 +45,7 @@ export class CommentController {
   @Delete(':id')
   async removeComment(
     @Param('slug') slug: string,
-    @Param('id') commentId: number,
+    @Param('id', ParseIntPipe) commentId: number,
     @Req() req,
   ) {
     const authorId = req.user.id as number;

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentEntity } from './entities/comment.entity';
 import { Repository } from 'typeorm';
@@ -15,7 +15,14 @@ export class CommentService {
     private readonly userService: UserService,
   ) {}
 
+  async validateSlug(slug: string) {
+    if (!slug.trim()) {
+      throw new BadRequestException('Slug is required');
+    }
+  }
+
   async create(body: string, slug: string, authorId: number) {
+    await this.validateSlug(slug);
     const author = await this.userService.findById(authorId);
 
     const article = await this.articleService.findBySlug(slug);
@@ -38,6 +45,7 @@ export class CommentService {
   }
 
   async findByArticle(slug: string) {
+    await this.validateSlug(slug);
     const article = await this.articleService.findBySlug(slug);
     const comments = await this.commentRepository.find({
       where: { article: { id: article.id } },
@@ -47,6 +55,7 @@ export class CommentService {
   }
 
   async remove(slug: string, authorId: number, commentId: number) {
+    await this.validateSlug(slug);
     const comment = await this.findById(commentId);
     if (comment.author.id !== authorId) {
       throw new ForbiddenException('Delete comment failed', {
