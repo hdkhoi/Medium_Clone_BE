@@ -13,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { PASSWORD_SALT_ROUNDS } from 'src/common/constants/user.constant';
 import { JwtService } from '@nestjs/jwt';
 import { IUser } from 'src/common/interfaces/user.interface';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserService {
@@ -83,7 +84,10 @@ export class UserService {
       });
     }
 
-    const result = await this.userRepository.findOne({ where: { id } });
+    const result = await this.userRepository.findOne({
+      where: { id },
+      relations: ['following', 'followers'],
+    });
     if (!result) {
       throw new NotFoundException('User not found', {
         description: `No user found with ID ${id}`,
@@ -101,7 +105,10 @@ export class UserService {
   }
 
   async findByUsername(username: string): Promise<UserEntity> {
-    const user = await this.userRepository.findOne({ where: { username } });
+    const user = await this.userRepository.findOne({
+      where: { username },
+      relations: ['following', 'followers'],
+    });
 
     if (!user) {
       throw new NotFoundException('User not found', {
@@ -112,7 +119,7 @@ export class UserService {
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<IUser> {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {
@@ -164,5 +171,82 @@ export class UserService {
       ...updatedUser,
       ...(newToken && { token: newToken }),
     };
+  }
+
+  async getProfile(username: string, currentUserId?: number) {
+    console.log('currentUserId', currentUserId);
+    const user = await this.findByUsername(username);
+    let isFollowing = false;
+    if (currentUserId) {
+      isFollowing = user.followers.some(
+        (follower) => follower.id === currentUserId,
+      );
+    }
+
+    const result = plainToInstance(UserEntity, {
+      ...user,
+      isFollowing,
+    });
+
+    return result;
+  }
+
+  async validateFollow(userId: number, targetUserUsername: string) {
+    const user = await this.findById(userId);
+    if (user.username === targetUserUsername) {
+      throw new BadRequestException('You cannot follow or unfollow yourself');
+    }
+    return user;
+  }
+
+  async follow(userId: number, targetUserUsername: string) {
+    const user = await this.validateFollow(userId, targetUserUsername);
+
+    if (user.username === targetUserUsername) {
+      throw new ConflictException('Follow failed', {
+        description: 'You cannot follow yourself',
+      });
+    }
+
+    const targetUser = await this.findByUsername(targetUserUsername);
+    if (targetUser.followers.some((follower) => follower.id === user.id)) {
+      throw new ConflictException('Follow failed', {
+        description: 'You are already following this user',
+      });
+    }
+
+    user.following.push(targetUser);
+    await this.userRepository.save(user);
+    const result = {
+      ...targetUser,
+      isFollowing: true,
+    };
+    return result;
+  }
+
+  async unfollowUser(userId: number, targetUserUsername: string) {
+    const user = await this.validateFollow(userId, targetUserUsername);
+
+    const targetUser = await this.findByUsername(targetUserUsername);
+    if (!targetUser.followers.some((follower) => follower.id === user.id)) {
+      throw new ConflictException('Unfollow failed', {
+        description: 'You are not following this user',
+      });
+    }
+
+    user.following = user.following.filter(
+      (following) => following.id !== targetUser.id,
+    );
+    await this.userRepository.save(user);
+    const result = {
+      ...targetUser,
+      isFollowing: false,
+    };
+    return result;
+  }
+
+  async getFollowing(userId: number) {
+    const user = await this.findById(userId);
+    return user.following;
   }
 }

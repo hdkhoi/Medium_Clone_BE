@@ -7,7 +7,7 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ArticleEntity } from './entities/article.entity';
-import { ArrayContains, Repository } from 'typeorm';
+import { ArrayContains, In, Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { TagEntity } from '../tag/entities/tag.entity';
 import { TagService } from '../tag/tag.service';
@@ -83,17 +83,27 @@ export class ArticleService {
       where: {
         ...(tag && { tagList: { name: tag } }),
         ...(author && { author: { username: author } }),
+        ...(favorited && {
+          favoritedBy: { username: favorited },
+        }),
       },
       take: limit,
       skip: offset,
     });
+
+    if (articles.length === 0) {
+      return {
+        message: 'No articles found',
+        data: { articles: [], articlesCount: 0 },
+      };
+    }
     return { articles, articlesCount: count };
   }
 
   async findBySlug(slug: string) {
     const article = await this.articleRepository.findOne({
       where: { slug },
-      relations: { author: true },
+      relations: { author: true, favoritedBy: true, tagList: true },
     });
 
     if (!article) {
@@ -102,6 +112,32 @@ export class ArticleService {
       });
     }
     return article;
+  }
+
+  async findByAuthor(authorId: number) {
+    return await this.articleRepository.find({
+      where: { author: { id: authorId } },
+      relations: { author: true, tagList: true },
+    });
+  }
+
+  async getFeed(userId: number, query: FindManyArticlesQueryDto) {
+    const { limit, offset } = query;
+
+    const followingUsers = await this.userService.getFollowing(userId);
+    const followingUsersId = followingUsers.map((user) => user.id);
+    if (followingUsersId.length === 0) {
+      return { articles: [], articlesCount: 0 };
+    }
+
+    const articles = await this.articleRepository.find({
+      where: { author: { id: In(followingUsersId) } },
+      take: limit,
+      skip: offset,
+      relations: { author: true, tagList: true },
+    });
+
+    return { articles, articlesCount: articles.length };
   }
 
   async update(slug: string, updateArticleDto: UpdateArticleDto) {
@@ -155,41 +191,35 @@ export class ArticleService {
     return await this.articleRepository.softRemove(article);
   }
 
-  // async addComment(
-  //   createCommentDto: CreateCommentDto,
-  //   authorId: number,
-  //   slug: string,
-  // ) {
-  //   const { body } = createCommentDto;
+  async favorite(slug: string, currentUserId: number) {
+    const article = await this.findBySlug(slug);
+    const currentUser = await this.userService.findById(currentUserId);
 
-  //   const article = await this.findBySlug(slug);
+    if (article.favoritedBy.some((user) => user.id === currentUser.id)) {
+      throw new ConflictException('Favorite failed', {
+        description: 'You have already favorited this article',
+      });
+    }
 
-  //   const author = await this.userService.findById(authorId);
+    article.favoritedBy.push(currentUser);
+    const updatedArticle = await this.articleRepository.save(article);
+    return updatedArticle;
+  }
 
-  //   return await this.commentSerivice.create(body, article.id, author);
-  // }
+  async unfavorite(slug: string, currentUserId: number) {
+    const article = await this.findBySlug(slug);
+    const currentUser = await this.userService.findById(currentUserId);
 
-  // async getComments(articleId: number) {
-  //   return await this.commentSerivice.findByArticleId(articleId);
-  // }
+    if (!article.favoritedBy.some((user) => user.id === currentUser.id)) {
+      throw new ConflictException('Unfavorite failed', {
+        description: 'You have not favorited this article',
+      });
+    }
 
-  // async removeComment(slug: string, commentId: number, authorId: number) {
-  //   const article = await this.findBySlug(slug);
-
-  //   const comments = await this.commentSerivice.findByArticleId(article.id);
-  //   const targetComment = comments.find((comment) => comment.id === commentId);
-  //   if (!targetComment) {
-  //     throw new ConflictException('Delete comment failed', {
-  //       description: 'Comment not found',
-  //     });
-  //   }
-
-  //   if (targetComment.author.id !== authorId) {
-  //     throw new ForbiddenException('Delete comment failed', {
-  //       description: 'You are not the author of this comment',
-  //     });
-  //   }
-
-  //   await this.commentSerivice.remove(commentId);
-  // }
+    article.favoritedBy = article.favoritedBy.filter(
+      (user) => user.id !== currentUser.id,
+    );
+    const updatedArticle = await this.articleRepository.save(article);
+    return updatedArticle;
+  }
 }

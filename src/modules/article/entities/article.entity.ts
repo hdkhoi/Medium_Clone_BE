@@ -45,6 +45,15 @@ export class ArticleEntity extends BaseEntity {
   author: UserEntity;
 
   @Exclude()
+  @ManyToMany(() => UserEntity, (user) => user.favoritedArticles)
+  @JoinTable({
+    name: 'user_favorite_articles',
+    joinColumn: { name: 'article_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+  })
+  favoritedBy: UserEntity[];
+
+  @Exclude()
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 

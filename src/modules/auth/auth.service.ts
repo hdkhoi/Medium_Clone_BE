@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SignInDto } from './dto/signin.dto';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { UserEntity } from '../user/entities/user.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,10 @@ export class AuthService {
 
     const user = await this.userService.findById(id);
 
-    return { ...(user as UserEntity), token: accessToken };
+    //plaintoinstance sẽ áp dụng decorator @Exclude và @Expose trong UserEntity với
+    //object truyền vào mà object đó là instance của UserEntity
+    const result = plainToInstance(UserEntity, { ...user, token: accessToken });
+
+    return result;
   }
 }
