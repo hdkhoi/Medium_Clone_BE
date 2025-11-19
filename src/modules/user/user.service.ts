@@ -174,7 +174,6 @@ export class UserService {
   }
 
   async getProfile(username: string, currentUserId?: number) {
-    console.log('currentUserId', currentUserId);
     const user = await this.findByUsername(username);
     let isFollowing = false;
     if (currentUserId) {
