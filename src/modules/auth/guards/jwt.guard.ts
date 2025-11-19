@@ -9,12 +9,19 @@ export class JwtGuard extends AuthGuard('jwt') {
     }
 
     if (!user) {
-      if (info && info.name === 'JsonWebTokenError') {
-        throw new UnauthorizedException('Invalid token');
-      } else if (info && info.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('Token has expired');
+      const message = 'Unauthorized';
+      if (info) {
+        const exception = {
+          JsonWebTokenError: 'Invalid token',
+          TokenExpiredError: 'Token expired',
+          Error: 'No token provided',
+        };
+
+        throw new UnauthorizedException(message, {
+          description: exception[info.name] || 'Unauthorized',
+        });
       } else {
-        throw new UnauthorizedException('Unauthorized');
+        throw new UnauthorizedException(message);
       }
     }
 

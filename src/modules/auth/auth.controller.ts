@@ -9,11 +9,14 @@ import {
   BadRequestException,
   Req,
   UseGuards,
+  SerializeOptions,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Throttle } from '@nestjs/throttler';
 import { SignInDto } from './dto/signin.dto';
+import { UserEntity } from '../user/entities/user.entity';
+import { IUser } from 'src/common/interfaces/user.interface';
 
 @Controller('users')
 export class AuthController {
@@ -21,8 +24,13 @@ export class AuthController {
 
   @Throttle({ login: {} })
   @UseGuards(LocalAuthGuard)
+  @SerializeOptions({ type: UserEntity })
   @Post('login')
-  async signIn(@Body() signInDto: SignInDto, @Req() req: any): Promise<any> {
-    return this.authService.signIn(req.user);
+  async signIn(@Body() signInDto: SignInDto, @Req() req: any) {
+    const user = await this.authService.signIn(req.user);
+    return {
+      message: 'Login successfully',
+      data: user as IUser,
+    };
   }
 }
