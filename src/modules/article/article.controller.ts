@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
@@ -45,6 +44,14 @@ export class ArticleController {
     };
   }
 
+  @UseGuards(JwtGuard)
+  @Get('feed')
+  async getFeed(@Req() req, @Query() query: FindManyArticlesQueryDto) {
+    const userId = req.user.id as number;
+    const feed = await this.articleService.getFeed(userId, query);
+    return { message: 'Feed retrieved successfully', data: feed };
+  }
+
   @Get(':slug')
   async findBySlug(@Param('slug') slug: string) {
     const article = await this.articleService.findBySlug(slug);
@@ -68,5 +75,21 @@ export class ArticleController {
     const authorId = req.user.id as number;
     await this.articleService.remove(slug, authorId);
     return { message: 'Article deleted successfully' };
+  }
+
+  @UseGuards(JwtGuard)
+  @Post(':slug/favorite')
+  async favorite(@Param('slug') slug: string, @Req() req) {
+    const currentUserId = req.user.id as number;
+    const article = await this.articleService.favorite(slug, currentUserId);
+    return { message: 'Article favorited successfully', data: article };
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete(':slug/favorite')
+  async unfavorite(@Param('slug') slug: string, @Req() req) {
+    const currentUserId = req.user.id as number;
+    const article = await this.articleService.unfavorite(slug, currentUserId);
+    return { message: 'Article unfavorited successfully', data: article };
   }
 }

@@ -1,8 +1,8 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { BaseEntity } from 'src/common/class/base-entity.class';
 import { IUser } from 'src/common/interfaces/user.interface';
 import { ArticleEntity } from 'src/modules/article/entities/article.entity';
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {
@@ -27,6 +27,28 @@ export class UserEntity extends BaseEntity {
 
   @OneToMany(() => ArticleEntity, (article) => article.author)
   articles: ArticleEntity[];
+
+  // User theo dõi ai (following)
+  @Exclude()
+  @ManyToMany(() => UserEntity, (user) => user.followers)
+  @JoinTable({
+    name: 'user_follows', // ← Tên bảng trung gian
+    joinColumn: { name: 'follower_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'following_id', referencedColumnName: 'id' },
+  })
+  following: UserEntity[];
+
+  // Ai theo dõi user này (followers)
+  @Exclude()
+  @ManyToMany(() => UserEntity, (user) => user.following)
+  followers: UserEntity[];
+
+  @Exclude()
+  @ManyToMany(() => ArticleEntity, (article) => article.favoritedBy)
+  favoritedArticles: ArticleEntity[];
+
+  @Exclude()
+  declare id: number;
 
   @Exclude()
   declare created_at: Date;

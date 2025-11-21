@@ -18,6 +18,16 @@ export class TagController {
   @Get()
   async findAll() {
     const tags = await this.tagService.findAll();
-    return { message: 'Tags retrieved successfully', data: tags };
+    if (!tags || tags.length === 0) {
+      return {
+        message: 'No tags found',
+      };
+    }
+    const result = tags.map((tag) => tag.name);
+
+    return {
+      message: 'Tags retrieved successfully',
+      data: result,
+    };
   }
 }

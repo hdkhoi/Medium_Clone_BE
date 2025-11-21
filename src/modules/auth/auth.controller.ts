@@ -30,7 +30,7 @@ export class AuthController {
     const user = await this.authService.signIn(req.user);
     return {
       message: 'Login successfully',
-      data: user as IUser,
+      data: user,
     };
   }
 }
